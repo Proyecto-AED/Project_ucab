@@ -1,5 +1,8 @@
+#define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
 #include "menu.h"
+#include <stdio.h>
+#include <stdlib.h>
 using namespace std;
 
 void navegarMantenimiento() {
@@ -24,6 +27,8 @@ void navegarMantenimiento() {
             pantallaAgregarPersona();
             break;
         case 2:
+            pantallaModificarTelefono();
+            break;
         case 3:
         case 4:
         case 5:
@@ -48,7 +53,7 @@ void mostrarMenuPrincipal() {
     cout << "\tS I S T E M A   D I G I P A G O   M E R C A N C I A L\n";
     cout << "       ------------------------------------------------------------\n";
     cout << "\tRealizado por\n";
-    cout << "\tXxxx xxxxxxx  C.I. 99.999.999    Zzzz zzzzzzzz C.I. 99.889.987\n";
+    cout << "\tJohendry Zambrano  C.I. 30.991.103    Zzzz zzzzzzzz C.I. 99.889.987\n";
     cout << "\tYyyyyy yyyyy  C.I. 98.999.998    Mmmm mmmmmm C.I. 97.987.999\n";
     cout << "       ------------------------------------------------------------\n\n";
 
@@ -84,40 +89,137 @@ void mostrarMenuMantenimiento() {
 };
 
 void pantallaAgregarPersona() {
-    system("cls"); // Limpiamos la pantalla antes de mostrar
-    cout << "------------------------------------------------------------\n";
+    system("cls"); 
+    cout << "      ------------------------------------------------------------\n";
     cout << "\tS I S T E M A   D I G I P A G O   M E R C A N C I A L\n";
-    cout << "------------------------------------------------------------\n";
-    cout << "\t1 1  : AGREGAR persona\n";
-    cout << "------------------------------------------------------------\n\n";
+    cout << "      ------------------------------------------------------------\n";
+    cout << "\t1.1  : Agregar persona\n";
+    cout << "      ------------------------------------------------------------\n\n";
 
     int cedula;
     char nombre[30];
-    char telefono[11];
+    char telefono[13];
     char confirmar;
 
     cout << "Indique cedula de identidad: ";
     cin >> cedula;
-    cin.ignore(); // Limpiar buffer para leer bien el nombre
+    cin.ignore();
 
-    cout << "\nNombre: ";
+    cout << "\nNombre y Apellido (sin espacios o usa _): ";
     cin.getline(nombre, 30);
 
     cout << "Telefono: ";
-    cin.getline(telefono, 11);
+    cin.getline(telefono, 13);
 
-    cout << "\nDesea agregar la informacion (S/N)? ";
-    //cin >> confirmar;
+    FILE* archivo = fopen("data/personas.txt", "r");
+    int cedulaExistente;
+    char nombreTemp[30];
+    char telefonoTemp[13];
+    bool existe = false;
 
-    /*if (confirmar == 'S' || confirmar == 's') {
-        // --- Aquí debería ir la lógica para agregar realmente la persona a la lista ---
-        cout << "\n[INFO] Datos guardados (simulado, falta implementar almacenamiento)\n";
+    if (archivo != NULL) {
+        while (fscanf(archivo, "%d %s %s", &cedulaExistente, nombreTemp, telefonoTemp) != EOF) {
+            if (cedulaExistente == cedula) {
+                existe = true;
+                break;
+            }
+        }
+        fclose(archivo);
+    }
+
+    if (existe) {
+        cout << "\n[ERROR] Cedula ya registrada.\n";
     }
     else {
-        cout << "\n[INFO] Operacion cancelada por el usuario.\n";
+        cout << "\nDesea agregar la informacion (S/N)? ";
+        cin >> confirmar;
+
+        if (confirmar == 'S' || confirmar == 's') {
+            FILE* out = fopen("data/personas.txt", "a");
+            if (out != NULL) {
+                fprintf(out, "%d %s %s\n", cedula, nombre, telefono);
+                fclose(out);
+                cout << "\n[INFO] Datos guardados exitosamente.\n";
+            }
+            else {
+                cout << "\n[ERROR] No se pudo abrir el archivo para guardar.\n";
+            }
+        }
+        else {
+            cout << "\n[INFO] Operacion cancelada por el usuario.\n";
+        }
     }
 
-    cout << "\n<Pulse cualquier tecla para volver al menú mantenimiento>\n";
+    cout << "\n<Pulse cualquier tecla para volver al menu mantenimiento>\n";
     cin.ignore();
-    cin.get();*/
+    cin.get();
 }
+
+void pantallaModificarTelefono() {
+    system("cls");
+    cout << "      ------------------------------------------------------------\n";
+    cout << "\tS I S T E M A   D I G I P A G O   M E R C A N C I A L\n";
+    cout << "      ------------------------------------------------------------\n";
+    cout << "\t1.2  : MODIFICAR teléfono\n";
+    cout << "      ------------------------------------------------------------\n\n";
+
+    int cedulaBuscada;
+    int cedulaLeida;
+    char nombreTemp[30], telefonoTemp[13];
+    char nuevoTelefono[13];
+    char confirmar;
+    bool encontrado = false;
+
+    cout << "Indique cedula de identidad: ";
+    cin >> cedulaBuscada;
+
+    FILE* archivo = fopen("data/personas.txt", "r");
+    FILE* temporal = fopen("data/temp.txt", "w");
+
+    if (archivo == NULL || temporal == NULL) {
+        cout << "\n[ERROR] No se pudo abrir el archivo.\n";
+        return;
+    }
+
+    while (fscanf(archivo, "%d %s %s", &cedulaLeida, nombreTemp, telefonoTemp) != EOF) {
+        if (!encontrado && cedulaLeida == cedulaBuscada) {
+            encontrado = true;
+            cout << "\nNombre: " << nombreTemp;
+            cout << "\nTelefono actual: " << telefonoTemp;
+
+            cout << "\n\nNuevo numero = ";
+            cin.ignore();
+            cin.getline(nuevoTelefono, 13);
+
+            cout << "\nConfirma el nuevo numero (S/N)? ";
+            cin >> confirmar;
+
+            if (confirmar == 'S' || confirmar == 's') {
+                fprintf(temporal, "%d %s %s\n", cedulaLeida, nombreTemp, nuevoTelefono);
+                cout << "\n[INFO] Telefono actualizado.\n";
+            }
+            else {
+                fprintf(temporal, "%d %s %s\n", cedulaLeida, nombreTemp, telefonoTemp);
+                cout << "\n[INFO] Operacion cancelada, se mantiene el numero original.\n";
+            }
+        }
+        else {
+            fprintf(temporal, "%d %s %s\n", cedulaLeida, nombreTemp, telefonoTemp);
+        }
+    }
+
+    fclose(archivo);
+    fclose(temporal);
+
+    remove("data/personas.txt");
+    rename("data/temp.txt", "data/personas.txt");
+
+    if (!encontrado) {
+        cout << "\n[ERROR] Cedula no encontrada.\n";
+    }
+
+    cout << "\n<Pulse cualquier tecla para volver al menu de mantenimiento>\n";
+    cin.ignore();
+    cin.get();
+}
+
