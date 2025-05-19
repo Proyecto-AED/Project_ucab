@@ -9,6 +9,7 @@ void mostrarMenuMantenimiento();
 void pantallaAgregarPersona();
 
 void navegarMantenimiento();
+void pantallaModificarTelefono();
 
 #endif
 
