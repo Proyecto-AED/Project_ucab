@@ -13,8 +13,9 @@ struct BAfiliado {
 
 struct DGper {
     int cedula;
-    char nombre[30];
+    char nombre[50];
     char telefono[30];
+    char codigos_bancos[30];
     DGper * prox;
     BAfiliado * abajo;
 };
@@ -25,13 +26,23 @@ struct DGbancos {
     DGbancos * prox;
 };
 
+void muestralista( BAfiliado *p) {
+/* imprimie la lista por pantalla */
+BAfiliado *ax= p;
+while (ax!=NULL){
+cout<<"["<<ax->codigo <<"]->";
+ax=ax->prox;
+};
+};
 
-void muestralista( DGper *p, char d) {
+void muestralista_completo( DGper *p, char d) {
 /* imprimie la lista por pantalla */
 DGper *ax= p;
 cout<< "\n\n\tContenido de la lista \n\n "<<d<<"->";
 while (ax!=NULL){
-cout<<"["<<ax->cedula <<"]->";
+cout<<"["<<ax->cedula << "," << ax->telefono << "," << ax->nombre << ", ("; 
+muestralista(ax->abajo);
+cout << " )" << "]->";
 ax=ax->prox;
 };
 cout<<"NULL \n\n";
@@ -42,7 +53,7 @@ void muestralista2( DGbancos *p, char d) {
 DGbancos *ax= p;
 cout<< "\n\n\tContenido de la lista \n\n "<<d<<"->";
 while (ax!=NULL){
-cout<<"["<<ax->codigo <<"]->";
+cout<<"["<<ax->codigo << "," << ax->descripcion <<"]->";
 ax=ax->prox;
 };
 cout<<"NULL \n\n";
@@ -54,18 +65,35 @@ DGper* cargar_lista_desde_archivo(const char*nombre_del_archivo){
     DGper* lista = NULL;
     DGper* ultimo = NULL;
     int cedula;
-    char nombre[30], telefono[11];
-    
-    while(fscanf(archivo, "%d %29s %29s", &cedula, nombre, telefono) == 3){
+    char nombre[50], telefono[30], codigos_bancos[30]; // <-- Tamaños corregidos
+    while(fscanf(archivo, "%d %49s %29s %29s", &cedula, nombre, telefono, codigos_bancos) == 4){
         DGper * nuevo = new DGper;
         nuevo->cedula = cedula;
         strcpy(nuevo->nombre, nombre);
         strcpy(nuevo->telefono, telefono);
+        strcpy(nuevo->codigos_bancos, codigos_bancos);
         nuevo->prox = NULL;
-        BAfiliado * afilizado1 = new BAfiliado;
-        afilizado1 ->codigo = 1;
-        afilizado1 ->prox= NULL;
-        nuevo ->abajo = afilizado1;
+
+        BAfiliado * lista_bancos = NULL;
+        BAfiliado * ultimo_bancos = NULL;
+
+        char * delimitador = strtok(codigos_bancos, ",");
+
+        while ( delimitador != NULL ){
+            BAfiliado * afiliado = new BAfiliado;
+            afiliado->codigo = atoi(delimitador);
+            afiliado->prox = NULL;
+            if (lista_bancos == NULL){
+                lista_bancos = afiliado;
+                ultimo_bancos = afiliado;
+            }else{
+                ultimo_bancos->prox = afiliado;
+                ultimo_bancos = afiliado;
+            }
+            delimitador = strtok(NULL, ",");
+        }
+        nuevo -> abajo = lista_bancos;
+        
         if(lista == NULL){
             lista = nuevo;
             ultimo = nuevo;
@@ -168,7 +196,7 @@ void pantallaAgregarPersona() {
     cout << "Telefono: ";
     cin.getline(telefono, 13);
 
-    FILE* archivo = fopen("data/personas.txt", "r");
+    FILE* archivo = fopen("personas.txt", "r");
     int cedulaExistente;
     char nombreTemp[30];
     char telefonoTemp[13];
@@ -183,6 +211,31 @@ void pantallaAgregarPersona() {
         }
         fclose(archivo);
     }
+
+    if (existe) {
+        cout << "\n[ERROR] Cedula ya registrada.\n";
+    } else {
+        cout << "\nDesea agregar la informacion (S/N)? ";
+        cin >> confirmar;
+
+        if (confirmar == 'S' || confirmar == 's') {
+            FILE* archivoGuardar = fopen("personas.txt", "a");
+            if (archivoGuardar != NULL) {
+                // Guardar cedula, nombre, telefono y el "1" al final
+                fprintf(archivoGuardar, "%d %s %s 1\n", cedula, nombre, telefono);
+                fclose(archivoGuardar);
+                cout << "\n[INFO] Datos guardados correctamente.\n";
+            } else {
+                cout << "\n[ERROR] No se pudo abrir el archivo para guardar los datos.\n";
+            }
+        } else {
+            cout << "\n[INFO] Operacion cancelada por el usuario.\n";
+        }
+    }
+
+    cout << "\n<Pulse cualquier tecla para volver al menu mantenimiento>\n";
+    cin.ignore();
+    cin.get();
 }
 
 
@@ -252,6 +305,20 @@ void pantallaModificarTelefono() {
     cout << "\n<Pulse cualquier tecla para volver al menu de mantenimiento>\n";
     cin.ignore();
     cin.get();
+}
+
+void pantallaEliminarPersona (){
+    system("cls"); // Limpiamos la pantalla antes de mostrar
+    cout << "------------------------------------------------------------\n";
+    cout << "\tS I S T E M A   D I G I P A G O   M E R C A N C I A L\n";
+    cout << "------------------------------------------------------------\n";
+    cout << "\t1 1  : ELIMINAR persona\n";
+    cout << "------------------------------------------------------------\n\n";
+    
+    // FILE * archivo;
+    
+
+
 }
 
 void navegarMantenimiento() {
