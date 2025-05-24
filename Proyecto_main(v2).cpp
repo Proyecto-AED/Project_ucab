@@ -5,7 +5,7 @@ using namespace std;
 int main() {
     int opcion = -1;
     DGper * lista = cargar_lista_desde_archivo("personas.txt");
-    muestralista(lista, 'L');
+    muestralista_completo(lista, 'L');
     DGbancos * lista2 = cargar_lista_desde_archivo_bancos("bancos.txt");
     muestralista2(lista2, 'B');
 
